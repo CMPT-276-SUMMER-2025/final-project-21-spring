@@ -2,15 +2,18 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function Navigation() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   return (
-    <nav className="flex flex-row justify-between items-center pl-50 pr-50 h-15 pt-10">
-      <h1 className="font-bold text-5xl">CloudCue</h1>
+    <nav className="flex justify-between mt-10 items-center">
+		<div className="pl-50">
+      		<Image  src="/LOGO2.png" alt="Logo" width={150} height={100}></Image>
+	 	</div>
       <div>
-        <ul className="flex gap-20 text-md font-bold ">
+        <ul className="flex gap-20 text-md font-bold pr-50">
           <li>
             <motion.div
               className="flex flex-col"
@@ -19,7 +22,7 @@ export default function Navigation() {
             >
               <Link href="#">Home</Link>
               <div
-                className={`border-t-4 border-blue-300 rounded-xl relative bottom-1 transition-all duration-300 ease-in-out ${
+                className={`border-t-4 border-cyan-400 rounded-xl relative bottom-1 transition-all duration-300 ease-in-out ${
                   hoveredItem === "home" ? "w-10/12" : "w-0"
                 }`}
               ></div>
@@ -33,7 +36,7 @@ export default function Navigation() {
             >
               <Link href="#">Activities</Link>
               <div
-                className={`border-t-4 border-blue-300 rounded-xl relative bottom-1 transition-all duration-300 ease-in-out ${
+                className={`border-t-4 border-cyan-400 rounded-xl relative bottom-1 transition-all duration-300 ease-in-out ${
                   hoveredItem === "activities" ? "w-10/12" : "w-0"
                 }`}
               ></div>
@@ -47,7 +50,7 @@ export default function Navigation() {
             >
               <Link href="#">Favorites</Link>
               <div
-                className={`border-t-4 border-blue-300 rounded-xl relative bottom-1 transition-all duration-300 ease-in-out ${
+                className={`border-t-4 border-cyan-400 rounded-xl relative bottom-1 transition-all duration-300 ease-in-out ${
                   hoveredItem === "favorites" ? "w-10/12" : "w-0"
                 }`}
               ></div>
@@ -61,7 +64,7 @@ export default function Navigation() {
             >
               <Link href="#">Help</Link>
               <div
-                className={`border-t-4 border-blue-300 rounded-xl relative bottom-1 transition-all duration-300 ease-in-out ${
+                className={`border-t-4 border-cyan-400 rounded-xl relative bottom-1 transition-all duration-300 ease-in-out ${
                   hoveredItem === "help" ? "w-10/12" : "w-0"
                 }`}
               ></div>
