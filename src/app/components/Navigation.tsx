@@ -20,7 +20,7 @@ export default function Navigation() {
               onHoverStart={() => setHoveredItem("home")}
               onHoverEnd={() => setHoveredItem(null)}
             >
-              <Link href="#">Home</Link>
+              <Link href="/">Home</Link>
               <div
                 className={`border-t-4 border-cyan-400 rounded-xl relative bottom-1 transition-all duration-300 ease-in-out ${
                   hoveredItem === "home" ? "w-10/12" : "w-0"
@@ -34,7 +34,7 @@ export default function Navigation() {
               onHoverStart={() => setHoveredItem("favorites")}
               onHoverEnd={() => setHoveredItem(null)}
             >
-              <Link href="#">Favorites</Link>
+              <Link href="/favorites">Favorites</Link>
               <div
                 className={`border-t-4 border-cyan-400 rounded-xl relative bottom-1 transition-all duration-300 ease-in-out ${
                   hoveredItem === "favorites" ? "w-10/12" : "w-0"
@@ -48,7 +48,7 @@ export default function Navigation() {
               onHoverStart={() => setHoveredItem("help")}
               onHoverEnd={() => setHoveredItem(null)}
             >
-              <Link href="#">Help</Link>
+              <Link href="/help">Help</Link>
               <div
                 className={`border-t-4 border-cyan-400 rounded-xl relative bottom-1 transition-all duration-300 ease-in-out ${
                   hoveredItem === "help" ? "w-10/12" : "w-0"
