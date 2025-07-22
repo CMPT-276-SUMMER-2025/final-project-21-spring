@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Funnel_Display } from "next/font/google";
 import "./globals.css";
 import Navigation from "./components/Navigation";
+import Footer from "./components/Footer";
 
 const primaryFont = Funnel_Display({
   subsets: ["latin"],
@@ -18,13 +19,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${primaryFont.className} antialiased`}>
-          <div className="absolute top-0 z-[-2] h-screen w-screen  transform bg-white bg-[radial-gradient(60%_120%_at_50%_50%,hsla(0,0%,100%,0)_0,rgba(180,240,250,.5)_100%)]
+    <html lang="en" className="h-full">
+      <body className={`${primaryFont.className} antialiased h-full`}>
+        <div className="absolute inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem]"></div>
 
-">
+        <div className="min-h-screen flex flex-col">
           <Navigation />
-          {children}
+          <main className="flex-1">{children}</main>
+          <Footer />
         </div>
       </body>
     </html>

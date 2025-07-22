@@ -31,20 +31,6 @@ export default function Navigation() {
           <li>
             <motion.div
               className="flex flex-col"
-              onHoverStart={() => setHoveredItem("activities")}
-              onHoverEnd={() => setHoveredItem(null)}
-            >
-              <Link href="#">Activities</Link>
-              <div
-                className={`border-t-4 border-cyan-400 rounded-xl relative bottom-1 transition-all duration-300 ease-in-out ${
-                  hoveredItem === "activities" ? "w-10/12" : "w-0"
-                }`}
-              ></div>
-            </motion.div>
-          </li>
-          <li>
-            <motion.div
-              className="flex flex-col"
               onHoverStart={() => setHoveredItem("favorites")}
               onHoverEnd={() => setHoveredItem(null)}
             >
