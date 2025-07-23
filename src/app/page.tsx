@@ -38,7 +38,7 @@ export default function Home() {
             type="text"
             id="location"
             name="location"
-            placeholder="Enter your location (e.g., Vancouver)"
+            placeholder="Enter your location (e.g., Vancouver, BC)"
             required
           />
           <button
