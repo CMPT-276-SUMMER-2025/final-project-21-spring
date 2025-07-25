@@ -40,6 +40,13 @@ interface GeoData {
   features: GeoFeature[];
 }
 
+const CATEGORY_EMOJIS: Record<string, string> = {
+  tourism: "🏛️",
+  entertainment: "🎵",
+  food_culinary: "🍽️",
+  leisure: "🎡",
+};
+
 const outfitSuggestions: Record<string, string> = {
   // Sunny conditions
   Sunny: "🕶️ Sunglasses and light clothes",
@@ -165,6 +172,7 @@ async function fetchForecast(city: string): Promise<WeatherData> {
 }
 
 function ActivitiesContent() {
+  const [activities, setActivities] = useState<Activity[]>([]);
   const searchParams = useSearchParams();
   const city = searchParams.get("city") || "Unknown Location";
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
@@ -178,6 +186,12 @@ function ActivitiesContent() {
         const [w, g] = await Promise.all([fetchWeather(city), fetchGeo(city)]);
         setWeatherData(w);
         setGeoData(g);
+        const { lat, lon } = g.features[0].properties;
+        setWeatherData(w);
+        setGeoData(g);
+
+        const places = await fetchPlaces(lat, lon, city);
+        setActivities(places);
       } catch (e: any) {
         setError(e.message);
       } finally {
@@ -218,12 +232,6 @@ function ActivitiesContent() {
   const { lat, lon, formatted } = geoData.features[0].properties;
   const mapSrc = `https://api.geoapify.com/v1/staticmap?center=lonlat:${lon},${lat}&zoom=12&size=600x300&apiKey=${process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY}`;
 
-  const activities: Activity[] = [
-    { name: 'City Museum', location: city, category: 'Tourism', emoji: '🏛️' },
-    { name: 'Central Park Concert', location: city, category: 'Entertainment', emoji: '🎵' },
-    { name: 'Food Market', location: city, category: 'Culinary', emoji: '🍽️' },
-    { name: 'Historic Walking Tour', location: city, category: 'Tourism', emoji: '🚶‍♂️' },
-  ];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -338,7 +346,7 @@ function ActivitiesContent() {
       )}
 
       {/* Activities */}
- <div className="max-w-6xl mx-auto mt-15 mb-15">
+      <div className="max-w-6xl mx-auto mt-15 mb-15">
         <h2 className="text-3xl font-bold mb-6">Activities in {weatherData.location.name}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {activities.map(act => (
@@ -363,6 +371,7 @@ function ActivitiesContent() {
         <p className="text-gray-600">{formatted} ({lat.toFixed(4)}, {lon.toFixed(4)})</p>
       </div>
     </div>
+  
   );
 }
 
@@ -392,7 +401,6 @@ interface Activity {
   emoji: string;
 }
 
-// Fetch weather
 async function fetchWeather(city: string): Promise<WeatherData> {
   const key = process.env.NEXT_PUBLIC_WEATHER_API_KEY!;
   const base = process.env.NEXT_PUBLIC_WEATHER_BASE_URL!;
@@ -401,11 +409,47 @@ async function fetchWeather(city: string): Promise<WeatherData> {
   return res.json();
 }
 
-// Fetch geocode
 async function fetchGeo(city: string): Promise<GeoData> {
   const key = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY!;
   const base = process.env.NEXT_PUBLIC_GEOAPIFY_BASE_URL!;
   const res = await fetch(`${base}/geocode/search?text=${encodeURIComponent(city)}&apiKey=${key}`);
   if (!res.ok) throw new Error('Geocode fetch failed');
   return res.json();
+}
+
+async function fetchPlaces(lat: number, lon: number, city: string): Promise<Activity[]> {
+  const key  = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY!;
+  const base = "https://api.geoapify.com/v2/places";
+  const categories = [
+    "tourism", 
+    "entertainment", 
+    "catering.restaurant", 
+    "catering.cafe", 
+    "catering.bar"
+  ].join(",");
+
+  // bounding box ±0.1° (~11 km)
+  const bbox = `${lon - 0.1},${lat - 0.1},${lon + 0.1},${lat + 0.1}`;
+
+  const url =
+    `${base}?categories=${categories}` +
+    `&filter=rect:${bbox}` +
+    `&limit=12&apiKey=${key}`;
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.error("Places fetch failed status:", res.status, await res.text());
+    throw new Error("Places fetch failed");
+  }
+
+  const json = await res.json();
+  return json.features.map((f: any) => {
+    const catSlug = f.properties.categories?.[0]?.slug || "tourism";
+    return {
+      name:     f.properties.name       || "Unknown",
+      location: f.properties.address_line1 || city,
+      category: f.properties.categories?.[0]?.name || "Tourism",
+      emoji:    CATEGORY_EMOJIS[catSlug]    || "📍",
+    };
+  });
 }
