@@ -22,7 +22,7 @@ export default function Home() {
       <div className="flex flex-col justify-center items-center mt-30">
         <h1 className="font-bold text-9xl">CloudCue</h1>
         <h1 className="font-bold text-xl text-center text-gray-500">
-          CloudCue suggests the best things to do in BC—rain or shine.<br></br>
+          CloudCue suggests the best things to do on your Vacation rain or shine.<br></br>
           Personalized, weather-smart recommendations so you can make the most
           of every day.
         </h1>
