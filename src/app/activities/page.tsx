@@ -231,7 +231,7 @@ function ActivitiesContent() {
                   isToday ? "ring-2 ring-cyan-500" : ""
                 }`}
               >
-                {/* Card Header */}
+               
                 <div className="bg-gradient-to-r from-cyan-500 to-blue-500 p-6 text-white">
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="font-bold text-xl">
@@ -252,7 +252,6 @@ function ActivitiesContent() {
                   <p className="text-cyan-100 text-sm">{day.date}</p>
                 </div>
 
-                {/* Weather Icon & Condition */}
                 <div className="p-6 text-center">
                   <img
                     src={`https:${day.day.condition.icon}`}
@@ -263,7 +262,7 @@ function ActivitiesContent() {
                     {day.day.condition.text}
                   </h4>
 
-                  {/* Temperature */}
+                 
                   <div className="grid grid-cols-3 gap-2 mb-4 text-sm">
                     <div className="bg-blue-50 rounded-lg p-2">
                       <p className="text-blue-600 font-semibold">Avg</p>
@@ -285,7 +284,7 @@ function ActivitiesContent() {
                     </div>
                   </div>
 
-                  {/* Rain Chance */}
+                 
                   <div className="bg-blue-50 rounded-lg p-3 mb-4">
                     <p className="text-blue-600 font-semibold text-sm">
                       Rain Chance
@@ -297,7 +296,7 @@ function ActivitiesContent() {
                     </p>
                   </div>
 
-                  {/* Outfit Suggestion */}
+                  
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                     <p className="text-yellow-800 font-semibold text-sm mb-1">
                       Outfit Suggestion
