@@ -28,6 +28,18 @@ interface WeatherData {
   };
 }
 
+interface GeoFeature {
+  properties: {
+    lat: number;
+    lon: number;
+    formatted: string;
+  };
+}
+
+interface GeoData {
+  features: GeoFeature[];
+}
+
 const outfitSuggestions: Record<string, string> = {
   // Sunny conditions
   Sunny: "🕶️ Sunglasses and light clothes",
@@ -158,21 +170,22 @@ function ActivitiesContent() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [geoData, setGeoData] = useState<GeoData | null>(null);
 
   useEffect(() => {
-    if (city && city !== "Unknown Location") {
-      fetchForecast(city)
-        .then((data) => {
-          setWeatherData(data);
-          setLoading(false);
-        })
-        .catch((err) => {
-          setError(err.message);
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
+    async function loadAll() {
+      try {
+        const [w, g] = await Promise.all([fetchWeather(city), fetchGeo(city)]);
+        setWeatherData(w);
+        setGeoData(g);
+      } catch (e: any) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
     }
+    if (city !== "Unknown Location") loadAll();
+    else setLoading(false);
   }, [city]);
 
   if (loading) {
@@ -186,7 +199,7 @@ function ActivitiesContent() {
     );
   }
 
-  if (error) {
+  if (error|| !weatherData || !geoData || geoData.features.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
@@ -201,6 +214,16 @@ function ActivitiesContent() {
       </div>
     );
   }
+
+  const { lat, lon, formatted } = geoData.features[0].properties;
+  const mapSrc = `https://api.geoapify.com/v1/staticmap?center=lonlat:${lon},${lat}&zoom=12&size=600x300&apiKey=${process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY}`;
+
+  const activities: Activity[] = [
+    { name: 'City Museum', location: city, category: 'Tourism', emoji: '🏛️' },
+    { name: 'Central Park Concert', location: city, category: 'Entertainment', emoji: '🎵' },
+    { name: 'Food Market', location: city, category: 'Culinary', emoji: '🍽️' },
+    { name: 'Historic Walking Tour', location: city, category: 'Tourism', emoji: '🚶‍♂️' },
+  ];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -236,7 +259,6 @@ function ActivitiesContent() {
                 <div className="bg-gradient-to-r from-cyan-500 to-blue-500 p-6 text-white">
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="font-bold text-xl">
-                      <h3 className="font-bold text-xl">
                           {index === 0
                             ? "Today"
                             : index === 1
@@ -246,7 +268,6 @@ function ActivitiesContent() {
                                 month: "short",
                                 day: "numeric",
                               })}
-                      </h3>
 
                     </h3>
                     {isToday && (
@@ -316,17 +337,30 @@ function ActivitiesContent() {
         </div>
       )}
 
-      {/* Activity Suggestions Footer */}
-      <div className="mt-12 text-center">
-        <div className="bg-white rounded-xl p-6 shadow-lg inline-block">
-          <h3 className="text-2xl font-bold text-gray-700 mb-2">
-            🎯 Activity Planning
-          </h3>
-          <p className="text-gray-500">
-            Use this forecast to plan your perfect day in{" "}
-            {weatherData?.location.name || city}!
-          </p>
+      {/* Activities */}
+ <div className="max-w-6xl mx-auto mt-15 mb-15">
+        <h2 className="text-3xl font-bold mb-6">Activities in {weatherData.location.name}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {activities.map(act => (
+            <div key={act.name} className="bg-white rounded-xl shadow p-6 flex flex-col justify-between">
+              <div>
+                <h3 className="text-2xl font-semibold mb-2">{act.emoji} {act.name}</h3>
+                <p className="text-gray-600 mb-4">{act.location}</p>
+                <span className="inline-block bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium mb-4">{act.emoji} {act.category}</span>
+              </div>
+              <div className="flex space-x-2 mt-4">
+                <button className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white py-2 rounded-lg">View Details</button>
+                <button className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-lg">Location</button>
+              </div>
+            </div>
+          ))}
         </div>
+      </div>
+
+      {/* Map */}
+      <div className="text-center">
+        <img src={mapSrc} alt={`Map of ${weatherData.location.name}`} className="mx-auto rounded-lg mb-4 shadow" />
+        <p className="text-gray-600">{formatted} ({lat.toFixed(4)}, {lon.toFixed(4)})</p>
       </div>
     </div>
   );
@@ -340,4 +374,38 @@ export default function Activities() {
       <ActivitiesContent />
     </Suspense>
   );
+}
+
+interface GeoFeature {
+  properties: { lat: number; lon: number; formatted: string };
+}
+
+interface GeoData {
+  features: GeoFeature[];
+}
+
+// Activity Interface
+interface Activity {
+  name: string;
+  location: string;
+  category: string;
+  emoji: string;
+}
+
+// Fetch weather
+async function fetchWeather(city: string): Promise<WeatherData> {
+  const key = process.env.NEXT_PUBLIC_WEATHER_API_KEY!;
+  const base = process.env.NEXT_PUBLIC_WEATHER_BASE_URL!;
+  const res = await fetch(`${base}/forecast.json?key=${key}&q=${encodeURIComponent(city)}&days=3`);
+  if (!res.ok) throw new Error('Weather fetch failed');
+  return res.json();
+}
+
+// Fetch geocode
+async function fetchGeo(city: string): Promise<GeoData> {
+  const key = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY!;
+  const base = process.env.NEXT_PUBLIC_GEOAPIFY_BASE_URL!;
+  const res = await fetch(`${base}/geocode/search?text=${encodeURIComponent(city)}&apiKey=${key}`);
+  if (!res.ok) throw new Error('Geocode fetch failed');
+  return res.json();
 }
