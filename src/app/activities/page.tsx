@@ -222,7 +222,8 @@ function ActivitiesContent() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {weatherData.forecast.forecastday.map((day, index) => {
             const suggestion = getOutfitSuggestion(day.day.condition.text);
-            const isToday = index === 0;
+            const todayStr = new Date().toLocaleDateString("en-CA"); // e.g. "2025-07-25"
+            const isToday = day.date === todayStr;
 
             return (
               <div
@@ -235,13 +236,18 @@ function ActivitiesContent() {
                 <div className="bg-gradient-to-r from-cyan-500 to-blue-500 p-6 text-white">
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="font-bold text-xl">
-                      {isToday
-                        ? "Today"
-                        : new Date(day.date).toLocaleDateString("en-US", {
-                            weekday: "long",
-                            month: "short",
-                            day: "numeric",
-                          })}
+                      <h3 className="font-bold text-xl">
+                          {index === 0
+                            ? "Today"
+                            : index === 1
+                            ? "Tomorrow"
+                            : new Date(day.date + "T12:00:00").toLocaleDateString("en-US", {
+                                weekday: "long",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                      </h3>
+
                     </h3>
                     {isToday && (
                       <span className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">
