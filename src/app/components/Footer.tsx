@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className="py-12 px-8 mt-25">
         <div className="font-bold text-gray-600 border-t  mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm">
-            © 2025 CloudCue. Made with ❤️ in Beautiful British Columbia.
+            © 2025 CloudCue. Made in Beautiful British Columbia.
           </p>
           <div className="flex gap-4 mt-4 md:mt-0">
             <span className="text-sm">Follow the weather:</span>
