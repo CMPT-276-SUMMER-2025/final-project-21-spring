@@ -366,7 +366,6 @@ function ActivitiesContent() {
   }
 
   const { lat, lon, formatted } = geoData.features[0].properties;
-  const mapSrc = `https://api.geoapify.com/v1/staticmap?center=lonlat:${lon},${lat}&zoom=12&size=600x300&apiKey=${process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY}`;
 
   // Filter activities based on selected tag
   const filteredActivities = selectedTag
@@ -377,184 +376,174 @@ function ActivitiesContent() {
   const allTags = [...new Set(activities.flatMap((activity) => activity.tags))];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="text-center mb-8">
-        <h1 className="font-bold text-6xl mb-4">
-          Weather Forecast for {weatherData?.location.name || city}
-        </h1>
-        <p className="text-xl text-gray-600">
-          {weatherData?.location.region &&
-            weatherData?.location.country &&
-            `${weatherData.location.region}, ${weatherData.location.country}`}
-        </p>
-        <p className="text-lg text-gray-500 mt-2">
-          Plan your activities based on the 3-day weather forecast
-        </p>
-      </div>
-
-      {weatherData && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {weatherData.forecast.forecastday.map((day, index) => {
-            const suggestion = getOutfitSuggestion(day.day.condition.text);
-            const todayStr = new Date().toLocaleDateString("en-CA"); // e.g. "2025-07-25"
-            const isToday = day.date === todayStr;
-
-            return (
-              <div
-                key={day.date}
-                className={`bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${
-                  isToday ? "ring-2 ring-cyan-500" : ""
-                }`}
-              >
-                <div className="bg-gradient-to-r from-cyan-500 to-blue-500 p-6 text-white">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-bold text-xl">
-                      {index === 0
-                        ? "Today"
-                        : index === 1
-                        ? "Tomorrow"
-                        : new Date(day.date + "T12:00:00").toLocaleDateString(
-                            "en-US",
-                            {
-                              weekday: "long",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )}
-                    </h3>
-                    {isToday && (
-                      <span className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">
-                        NOW
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-cyan-100 text-sm">{day.date}</p>
-                </div>
-
-                <div className="p-6 text-center">
-                  <img
-                    src={`https:${day.day.condition.icon}`}
-                    alt={day.day.condition.text}
-                    className="w-16 h-16 mx-auto mb-3"
-                  />
-                  <h4 className="font-semibold text-lg text-gray-800 mb-4">
-                    {day.day.condition.text}
-                  </h4>
-
-                  <div className="grid grid-cols-3 gap-2 mb-4 text-sm">
-                    <div className="bg-blue-50 rounded-lg p-2">
-                      <p className="text-blue-600 font-semibold">Avg</p>
-                      <p className="text-lg font-bold text-blue-800">
-                        {day.day.avgtemp_c}°C
-                      </p>
-                    </div>
-                    <div className="bg-red-50 rounded-lg p-2">
-                      <p className="text-red-600 font-semibold">High</p>
-                      <p className="text-lg font-bold text-red-800">
-                        {day.day.maxtemp_c}°C
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <p className="text-gray-600 font-semibold">Low</p>
-                      <p className="text-lg font-bold text-gray-800">
-                        {day.day.mintemp_c}°C
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-blue-50 rounded-lg p-3 mb-4">
-                    <p className="text-blue-600 font-semibold text-sm">
-                      Rain Chance
-                    </p>
-                    <p className="text-xl font-bold text-blue-800">
-                      {day.day.daily_chance_of_rain ||
-                        day.day.daily_will_it_rain}
-                      %
-                    </p>
-                  </div>
-
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <p className="text-yellow-800 font-semibold text-sm mb-1">
-                      Outfit Suggestion
-                    </p>
-                    <p className="text-yellow-700 text-sm">{suggestion}</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <h1 className="font-bold text-6xl mb-4">
+            Weather Forecast for {weatherData?.location.name || city}
+          </h1>
+          <p className="text-xl text-gray-600">
+            {weatherData?.location.region &&
+              weatherData?.location.country &&
+              `${weatherData.location.region}, ${weatherData.location.country}`}
+          </p>
+          <p className="text-lg text-gray-500 mt-2">
+            Plan your activities based on the 3-day weather forecast
+          </p>
         </div>
-      )}
 
-      {/* Activities Section */}
-      <div className="max-w-6xl mx-auto mt-15 mb-15">
-        <h2 className="text-3xl font-bold mb-6">
-          Activities in {weatherData?.location.name}
-        </h2>
+        {weatherData && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {weatherData.forecast.forecastday.map((day, index) => {
+              const suggestion = getOutfitSuggestion(day.day.condition.text);
+              const todayStr = new Date().toLocaleDateString("en-CA"); // e.g. "2025-07-25"
+              const isToday = day.date === todayStr;
 
-        {/* Tag Filter */}
-        {allTags.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-4">Filter by tags:</h3>
-            <div className="flex flex-wrap gap-2 mb-4">
-              <button
-                onClick={() => setSelectedTag(null)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  selectedTag === null
-                    ? "bg-blue-500 text-white shadow-lg"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                All Activities
-              </button>
-              {allTags.map((tag) => (
+              return (
+                <div
+                  key={day.date}
+                  className={`bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${
+                    isToday ? "ring-2 ring-cyan-500" : ""
+                  }`}
+                >
+                  <div className="bg-gradient-to-r from-cyan-500 to-blue-500 p-6 text-white">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-bold text-xl">
+                        {index === 0
+                          ? "Today"
+                          : index === 1
+                          ? "Tomorrow"
+                          : new Date(day.date + "T12:00:00").toLocaleDateString(
+                              "en-US",
+                              {
+                                weekday: "long",
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )}
+                      </h3>
+                      {isToday && (
+                        <span className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">
+                          NOW
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-cyan-100 text-sm">{day.date}</p>
+                  </div>
+
+                  <div className="p-6 text-center">
+                    <img
+                      src={`https:${day.day.condition.icon}`}
+                      alt={day.day.condition.text}
+                      className="w-16 h-16 mx-auto mb-3"
+                    />
+                    <h4 className="font-semibold text-lg text-gray-800 mb-4">
+                      {day.day.condition.text}
+                    </h4>
+
+                    <div className="grid grid-cols-3 gap-2 mb-4 text-sm">
+                      <div className="bg-blue-50 rounded-lg p-2">
+                        <p className="text-blue-600 font-semibold">Avg</p>
+                        <p className="text-lg font-bold text-blue-800">
+                          {day.day.avgtemp_c}°C
+                        </p>
+                      </div>
+                      <div className="bg-red-50 rounded-lg p-2">
+                        <p className="text-red-600 font-semibold">High</p>
+                        <p className="text-lg font-bold text-red-800">
+                          {day.day.maxtemp_c}°C
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-2">
+                        <p className="text-gray-600 font-semibold">Low</p>
+                        <p className="text-lg font-bold text-gray-800">
+                          {day.day.mintemp_c}°C
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                      <p className="text-blue-600 font-semibold text-sm">
+                        Rain Chance
+                      </p>
+                      <p className="text-xl font-bold text-blue-800">
+                        {day.day.daily_chance_of_rain ||
+                          day.day.daily_will_it_rain}
+                        %
+                      </p>
+                    </div>
+
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <p className="text-yellow-800 font-semibold text-sm mb-1">
+                        Outfit Suggestion
+                      </p>
+                      <p className="text-yellow-700 text-sm">{suggestion}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Activities Section */}
+        <div className="max-w-6xl mx-auto mt-15 mb-15">
+          <h2 className="text-3xl font-bold mb-6">
+            Activities in {weatherData?.location.name}
+          </h2>
+
+          {/* Tag Filter */}
+          {allTags.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-4">Filter by tags:</h3>
+              <div className="flex flex-wrap gap-2 mb-4">
                 <button
-                  key={tag}
-                  onClick={() => setSelectedTag(tag)}
+                  onClick={() => setSelectedTag(null)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                    selectedTag === tag
+                    selectedTag === null
                       ? "bg-blue-500 text-white shadow-lg"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 >
-                  {tag}
+                  All Activities
                 </button>
-              ))}
+                {allTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setSelectedTag(tag)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                      selectedTag === tag
+                        ? "bg-blue-500 text-white shadow-lg"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Activity Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredActivities.map((activity) => (
-            <ActivityCard
-              key={activity.id}
-              activity={activity}
-              selectedTag={selectedTag}
-              onTagClick={setSelectedTag}
-            />
-          ))}
+          {/* Activity Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredActivities.map((activity) => (
+              <ActivityCard
+                key={activity.id}
+                activity={activity}
+                selectedTag={selectedTag}
+                onTagClick={setSelectedTag}
+              />
+            ))}
+          </div>
+
+          {filteredActivities.length === 0 && activities.length > 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-500">
+                No activities found with the selected tag.
+              </p>
+            </div>
+          )}
         </div>
-
-        {filteredActivities.length === 0 && activities.length > 0 && (
-          <div className="text-center py-8">
-            <p className="text-gray-500">
-              No activities found with the selected tag.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Map */}
-      <div className="text-center">
-        <img
-          src={mapSrc}
-          alt={`Map of ${weatherData.location.name}`}
-          className="mx-auto rounded-lg mb-4 shadow"
-        />
-        <p className="text-gray-600">
-          {formatted} ({lat.toFixed(4)}, {lon.toFixed(4)})
-        </p>
       </div>
     </div>
   );
@@ -596,6 +585,140 @@ async function fetchGeo(city: string): Promise<GeoData> {
   );
   if (!res.ok) throw new Error("Geocode fetch failed");
   return res.json();
+}
+
+// Function to generate realistic descriptions based on place type and name
+function generateDescription(
+  placeName: string,
+  category: string,
+  city: string
+): string {
+  const name = placeName.toLowerCase();
+  const categoryLower = category.toLowerCase();
+
+  // Specific descriptions based on category
+  if (categoryLower.includes("restaurant")) {
+    const cuisineTypes = [
+      "delicious local cuisine",
+      "fresh seasonal ingredients",
+      "authentic flavors",
+      "signature dishes",
+    ];
+    const randomCuisine =
+      cuisineTypes[Math.floor(Math.random() * cuisineTypes.length)];
+    return `Experience ${randomCuisine} at this popular dining destination in ${city}. Known for excellent service and a welcoming atmosphere.`;
+  }
+
+  if (categoryLower.includes("cafe")) {
+    const cafeFeatures = [
+      "artisanal coffee",
+      "fresh pastries",
+      "cozy atmosphere",
+      "local favorite",
+    ];
+    const randomFeature =
+      cafeFeatures[Math.floor(Math.random() * cafeFeatures.length)];
+    return `A charming cafe featuring ${randomFeature}. Perfect for a relaxing break while exploring ${city}.`;
+  }
+
+  if (categoryLower.includes("bar") || categoryLower.includes("pub")) {
+    const barFeatures = [
+      "craft cocktails",
+      "local brews",
+      "live entertainment",
+      "social atmosphere",
+    ];
+    const randomFeature =
+      barFeatures[Math.floor(Math.random() * barFeatures.length)];
+    return `Unwind with ${randomFeature} at this popular local spot. A great place to socialize and experience ${city}'s nightlife.`;
+  }
+
+  if (categoryLower.includes("museum")) {
+    return `Discover fascinating exhibits and cultural treasures at this renowned museum in ${city}. Educational and inspiring for visitors of all ages.`;
+  }
+
+  if (categoryLower.includes("park")) {
+    const parkFeatures = [
+      "scenic walking trails",
+      "beautiful gardens",
+      "recreational facilities",
+      "peaceful natural setting",
+    ];
+    const randomFeature =
+      parkFeatures[Math.floor(Math.random() * parkFeatures.length)];
+    return `Enjoy ${randomFeature} at this lovely green space in ${city}. Perfect for outdoor activities and connecting with nature.`;
+  }
+
+  if (
+    categoryLower.includes("theatre") ||
+    categoryLower.includes("theater") ||
+    categoryLower.includes("cinema")
+  ) {
+    return `Experience world-class entertainment at this premier venue in ${city}. Check their schedule for upcoming shows and events.`;
+  }
+
+  if (
+    categoryLower.includes("hotel") ||
+    categoryLower.includes("accommodation")
+  ) {
+    return `Comfortable accommodations with excellent amenities in the heart of ${city}. Ideal for travelers seeking quality and convenience.`;
+  }
+
+  if (categoryLower.includes("shopping") || categoryLower.includes("mall")) {
+    return `Browse unique shops and discover local treasures at this popular shopping destination in ${city}. Something for everyone to enjoy.`;
+  }
+
+  if (
+    categoryLower.includes("attraction") ||
+    categoryLower.includes("tourism")
+  ) {
+    const attractions = [
+      "breathtaking views and memorable experiences",
+      "rich history and cultural significance",
+      "stunning architecture and unique features",
+      "photo-worthy moments and lasting memories",
+    ];
+    const randomAttraction =
+      attractions[Math.floor(Math.random() * attractions.length)];
+    return `Discover ${randomAttraction} at this must-visit destination in ${city}. A highlight of any trip to the area.`;
+  }
+
+  if (categoryLower.includes("spa") || categoryLower.includes("wellness")) {
+    return `Rejuvenate your mind and body at this tranquil wellness sanctuary in ${city}. Professional treatments in a peaceful setting.`;
+  }
+
+  if (categoryLower.includes("sports") || categoryLower.includes("fitness")) {
+    return `Stay active and energized at this well-equipped facility in ${city}. Great for fitness enthusiasts and casual visitors alike.`;
+  }
+
+  // Enhanced fallback descriptions based on place name patterns
+  if (name.includes("center") || name.includes("centre")) {
+    return `A vibrant community hub offering various services and activities in ${city}. A focal point for local gatherings and events.`;
+  }
+
+  if (name.includes("plaza") || name.includes("square")) {
+    return `A bustling public space in the heart of ${city}. Great for people-watching, events, and soaking in the local atmosphere.`;
+  }
+
+  if (name.includes("gallery")) {
+    return `Explore inspiring art collections and creative works at this cultural venue in ${city}. A feast for art lovers and curious minds.`;
+  }
+
+  if (name.includes("market")) {
+    return `Experience local flavors and artisan goods at this vibrant marketplace in ${city}. Perfect for discovering unique finds and local culture.`;
+  }
+
+  // General fallback with more variety
+  const generalDescriptions = [
+    `A notable destination in ${city} worth visiting during your stay. Discover what makes this place special to locals and visitors alike.`,
+    `An interesting spot that adds character to ${city}'s diverse landscape. Perfect for those looking to explore beyond the typical tourist path.`,
+    `A local gem in ${city} that offers a unique glimpse into the area's culture and community. Well worth a visit during your time here.`,
+    `Experience authentic ${city} charm at this well-regarded local establishment. A favorite among both residents and travelers.`,
+  ];
+
+  return generalDescriptions[
+    Math.floor(Math.random() * generalDescriptions.length)
+  ];
 }
 
 // Update the fetchPlaces function to return Activity objects with all required fields
@@ -719,7 +842,11 @@ async function fetchPlaces(
       rating: Math.round((Math.random() * 2 + 3.5) * 10) / 10, // Random rating 3.5-5.0
       description:
         f.properties.description ||
-        `A great ${categoryName.toLowerCase()} spot in ${city}. Perfect for exploring the local culture and atmosphere.`,
+        generateDescription(
+          f.properties.name || "Unknown Place",
+          categoryName,
+          city
+        ),
       image: emoji,
       tags: tags,
     };
