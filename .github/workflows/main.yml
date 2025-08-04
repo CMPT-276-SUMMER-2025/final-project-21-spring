@@ -1,0 +1,55 @@
+name: Node JS Testing
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Build static export
+        env:
+          NEXT_PUBLIC_WEATHER_API_KEY: ${{ secrets.NEXT_PUBLIC_WEATHER_API_KEY }}
+          NEXT_PUBLIC_WEATHER_BASE_URL: ${{ secrets.NEXT_PUBLIC_WEATHER_BASE_URL }}
+          NEXT_PUBLIC_GEOAPIFY_API_KEY: ${{ secrets.NEXT_PUBLIC_GEOAPIFY_API_KEY }}
+          NEXT_PUBLIC_GEOAPIFY_BASE_URL: ${{ secrets.NEXT_PUBLIC_GEOAPIFY_BASE_URL }}
+        run: npm run build
+
+      - name: Test API connectivity
+        env:
+          NEXT_PUBLIC_WEATHER_API_KEY: ${{ secrets.NEXT_PUBLIC_WEATHER_API_KEY }}
+          NEXT_PUBLIC_WEATHER_BASE_URL: ${{ secrets.NEXT_PUBLIC_WEATHER_BASE_URL }}
+          NEXT_PUBLIC_GEOAPIFY_API_KEY: ${{ secrets.NEXT_PUBLIC_GEOAPIFY_API_KEY }}
+          NEXT_PUBLIC_GEOAPIFY_BASE_URL: ${{ secrets.NEXT_PUBLIC_GEOAPIFY_BASE_URL }}
+        run: |
+          echo "Testing Weather API..."
+          curl -f "${NEXT_PUBLIC_WEATHER_BASE_URL}/current.json?key=${NEXT_PUBLIC_WEATHER_API_KEY}&q=Vancouver" || echo "Weather API test failed"
+          
+          echo "Testing Geoapify API..."
+          curl -f "${NEXT_PUBLIC_GEOAPIFY_BASE_URL}/geocode/search?text=Vancouver&apiKey=${NEXT_PUBLIC_GEOAPIFY_API_KEY}" || echo "Geoapify API test failed"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-export
+          path: out/
+          retention-days: 7
