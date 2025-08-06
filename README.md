@@ -170,5 +170,3 @@ Key features include a smart favorites system that persists across sessions, tag
 - Machine learning-based activity suggestions
 
 ---
-
-\*Made with ❤️ in
