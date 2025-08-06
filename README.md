@@ -160,21 +160,6 @@ The app addresses the common problem of planning activities without considering 
 
 Key features include a smart favorites system that persists across sessions, tag-based filtering for easy activity discovery, and detailed weather forecasts with practical outfit suggestions. The responsive design ensures a seamless experience across all devices.
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📞 Support
-
-Visit the Help page in the app or refer to the documentation for detailed usage instructions.
-
-## 📱 Screenshots
-
-_Add screenshots of your app here to showcase the UI_
 
 ## 🔮 Future Enhancements
 
