@@ -171,4 +171,3 @@ Key features include a smart favorites system that persists across sessions, tag
 
 ---
 
-\*Made with ❤️ in British Columbia, Canada
