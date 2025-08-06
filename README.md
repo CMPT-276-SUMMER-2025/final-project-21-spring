@@ -144,14 +144,6 @@ The app uses several configuration files:
 - `tailwind.config.ts` - Tailwind CSS configuration
 - `tsconfig.json` - TypeScript configuration
 
-## 🚀 CI/CD
-
-GitHub Actions workflow handles:
-
-- Automated testing on push/PR
-- Build verification
-- API connectivity testing
-
 ## 📝 Project Description
 
 CloudCue is a comprehensive weather-aware activity discovery platform designed specifically for British Columbia. The application intelligently combines real-time weather data with local activity recommendations to help users make informed decisions about what to do and where to go.
@@ -168,6 +160,19 @@ Key features include a smart favorites system that persists across sessions, tag
 - Integration with booking platforms
 - Advanced weather alerts and notifications
 - Machine learning-based activity suggestions
+
+
+
+## 🤖 AI Acknowledgement
+
+This project was developed with the assistance of AI tools to enhance code quality, documentation, and development efficiency. AI was used for:
+
+- **Code Generation & Optimization**: Assistance with component structure, TypeScript interfaces, and React patterns
+- **Documentation**: Help with writing clear, comprehensive code comments and this README
+- **Debugging & Problem Solving**: Support in troubleshooting API integrations and resolving technical issues
+- **Best Practices**: Guidance on Next.js conventions, React hooks usage, and modern web development patterns
+
+While AI tools provided valuable assistance throughout the development process, all final code decisions, architecture choices, and feature implementations were made by the development team. The team takes full responsibility for the functionality, quality, and maintenance of this application.
 
 ---
 
