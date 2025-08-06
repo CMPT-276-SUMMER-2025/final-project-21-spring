@@ -169,3 +169,6 @@ Key features include a smart favorites system that persists across sessions, tag
 - Advanced weather alerts and notifications
 - Machine learning-based activity suggestions
 
+---
+
+*Made with ❤️ in Beautiful British Columbia*
