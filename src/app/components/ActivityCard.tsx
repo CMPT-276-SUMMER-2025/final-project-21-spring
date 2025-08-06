@@ -8,7 +8,7 @@ interface Activity {
   category: string;
   rating: number;
   description: string;
-  image: string;
+  image: string; // Actually contains emoji icons for now
   tags: string[];
 }
 
@@ -16,9 +16,13 @@ interface ActivityCardProps {
   activity: Activity;
   selectedTag: string | null;
   onTagClick: (tag: string) => void;
-  showRemoveButton?: boolean; // For favorites page to show remove instead of add
+  showRemoveButton?: boolean; // Used on favorites page to show remove instead of add
 }
 
+/**
+ * Reusable activity card component used on both activities and favorites pages.
+ * Handles favorite state management and provides links to external services.
+ */
 export default function ActivityCard({
   activity,
   selectedTag,
@@ -28,6 +32,7 @@ export default function ActivityCard({
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const isActivityFavorite = isFavorite(activity.id);
 
+  // Smart favorite button - switches between add/remove based on context
   const handleFavoriteClick = () => {
     if (showRemoveButton || isActivityFavorite) {
       removeFromFavorites(activity.id);
@@ -38,7 +43,7 @@ export default function ActivityCard({
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex flex-col h-full">
-      {/* Card Header */}
+      {/* Header with emoji icon and favorite button */}
       <div className="bg-gradient-to-r from-cyan-500 to-blue-500 p-6 text-white">
         <div className="flex justify-between items-start mb-2">
           <span className="text-4xl">{activity.image}</span>
@@ -51,6 +56,7 @@ export default function ActivityCard({
                 : "Add to favorites"
             }
           >
+            {/* Show filled heart for favorited items, plus for unfavorited */}
             {showRemoveButton || isActivityFavorite ? "❤️" : "➕"}
           </button>
         </div>
@@ -59,6 +65,7 @@ export default function ActivityCard({
       </div>
 
       <div className="p-6 flex flex-col flex-1">
+        {/* Category badge and rating */}
         <div className="flex items-center gap-2 mb-3">
           <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
             {activity.category}
@@ -73,6 +80,7 @@ export default function ActivityCard({
           {activity.description}
         </p>
 
+        {/* Clickable tag filters - highlighted if currently selected */}
         <div className="flex flex-wrap gap-2 mb-4 min-h-[2.5rem]">
           {activity.tags.map((tag: string, index: number) => (
             <button
@@ -89,9 +97,11 @@ export default function ActivityCard({
           ))}
         </div>
 
+        {/* Action buttons - open external links in new tabs */}
         <div className="flex gap-2 mt-auto">
           <button
             onClick={() => {
+              // Simple Google search for the activity - not perfect but works well enough
               const searchQuery = `${activity.name} ${activity.location}`;
               const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(
                 searchQuery
@@ -104,6 +114,7 @@ export default function ActivityCard({
           </button>
           <button
             onClick={() => {
+              // Open in Google Maps using their search API
               const mapsQuery = `${activity.name} ${activity.location}`;
               const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                 mapsQuery

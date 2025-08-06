@@ -3,6 +3,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import ActivityCard, { Activity } from "../components/ActivityCard";
 
+// Weather API response types - keeping these detailed for type safety
 interface WeatherDay {
   date: string;
   day: {
@@ -29,18 +30,7 @@ interface WeatherData {
   };
 }
 
-interface GeoFeature {
-  properties: {
-    lat: number;
-    lon: number;
-    formatted: string;
-  };
-}
-
-interface GeoData {
-  features: GeoFeature[];
-}
-
+// TODO: Consider moving these mappings to a separate constants file if they grow larger
 const CATEGORY_EMOJIS: Record<string, string> = {
   tourism: "🏛️",
   "tourism.attraction": "🎢",
@@ -182,6 +172,8 @@ const ACTIVITY_TAGS: Record<string, string[]> = {
   history: ["Past", "Educational", "Heritage", "Stories"],
 };
 
+// Outfit suggestions based on weather conditions
+// This was fun to write - covers most weather scenarios users might encounter
 const outfitSuggestions: Record<string, string> = {
   // Sunny conditions
   Sunny: "🕶️ Sunglasses and light clothes",
@@ -248,24 +240,20 @@ const outfitSuggestions: Record<string, string> = {
     "🧤 Winter coat and non-slip shoes",
 };
 
+/**
+ * Smart outfit suggestion function that handles weather API inconsistencies.
+ * Weather APIs sometimes return slightly different condition strings, so we use
+ * both exact matches and fuzzy matching to cover edge cases.
+ */
 function getOutfitSuggestion(condition: string): string {
-  // Debug: log the condition to see what we're getting
-  console.log("Weather condition:", condition);
-
-  // Try exact match first
+  // Try exact match first for best accuracy
   if (outfitSuggestions[condition]) {
     return outfitSuggestions[condition];
   }
 
-  // Try case-insensitive match
+  // Fallback to fuzzy matching for weather API inconsistencies
   const lowerCondition = condition.toLowerCase();
-  for (const [key, suggestion] of Object.entries(outfitSuggestions)) {
-    if (key.toLowerCase() === lowerCondition) {
-      return suggestion;
-    }
-  }
 
-  // Try partial matches for common patterns
   if (lowerCondition.includes("sunny") || lowerCondition.includes("clear")) {
     return "🕶️ Sunglasses and light clothes";
   }
@@ -285,309 +273,28 @@ function getOutfitSuggestion(condition: string): string {
     return "🌫️ Wear bright clothes for visibility";
   }
 
-  // Fallback with the actual condition shown
+  // Last resort - show the actual condition so users can decide
   return `🧳 Check the forecast before leaving! (${condition})`;
 }
 
-async function fetchForecast(city: string): Promise<WeatherData> {
-  const API_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
-  const BASE_URL = process.env.NEXT_PUBLIC_WEATHER_BASE_URL;
-
-  const response = await fetch(
-    `${BASE_URL}/forecast.json?key=${API_KEY}&q=${encodeURIComponent(
-      city
-    )}&days=3`
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch forecast");
-  }
-
-  return response.json();
-}
-
-function ActivitiesContent() {
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const searchParams = useSearchParams();
-  const city = searchParams.get("city") || "Unknown Location";
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [geoData, setGeoData] = useState<GeoData | null>(null);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadAll() {
-      try {
-        const [w, g] = await Promise.all([fetchWeather(city), fetchGeo(city)]);
-        setWeatherData(w);
-        setGeoData(g);
-        const { lat, lon } = g.features[0].properties;
-        setWeatherData(w);
-        setGeoData(g);
-
-        const places = await fetchPlaces(lat, lon, city);
-        setActivities(places);
-      } catch (e: any) {
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    if (city !== "Unknown Location") loadAll();
-    else setLoading(false);
-  }, [city]);
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
-          <p className="text-lg text-gray-600">Loading weather forecast...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !weatherData || !geoData || geoData.features.length === 0) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="font-bold text-6xl mb-4">Activities in {city}</h1>
-        </div>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
-          <p className="text-red-600 text-lg">❌ Error: {error}</p>
-          <p className="text-red-500 mt-2">
-            Please try searching for a different city.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const { lat, lon, formatted } = geoData.features[0].properties;
-
-  // Filter activities based on selected tag
-  const filteredActivities = selectedTag
-    ? activities.filter((activity) => activity.tags.includes(selectedTag))
-    : activities;
-
-  // Get all unique tags from activities
-  const allTags = [...new Set(activities.flatMap((activity) => activity.tags))];
-
-  return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="font-bold text-6xl mb-4">
-            Weather Forecast for {weatherData?.location.name || city}
-          </h1>
-          <p className="text-xl text-gray-600">
-            {weatherData?.location.region &&
-              weatherData?.location.country &&
-              `${weatherData.location.region}, ${weatherData.location.country}`}
-          </p>
-          <p className="text-lg text-gray-500 mt-2">
-            Plan your activities based on the 3-day weather forecast
-          </p>
-        </div>
-
-        {weatherData && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {weatherData.forecast.forecastday.map((day, index) => {
-              const suggestion = getOutfitSuggestion(day.day.condition.text);
-              const todayStr = new Date().toLocaleDateString("en-CA"); // e.g. "2025-07-25"
-              const isToday = day.date === todayStr;
-
-              return (
-                <div
-                  key={day.date}
-                  className={`bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${
-                    isToday ? "ring-2 ring-cyan-500" : ""
-                  }`}
-                >
-                  <div className="bg-gradient-to-r from-cyan-500 to-blue-500 p-6 text-white">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-bold text-xl">
-                        {index === 0
-                          ? "Today"
-                          : index === 1
-                          ? "Tomorrow"
-                          : new Date(day.date + "T12:00:00").toLocaleDateString(
-                              "en-US",
-                              {
-                                weekday: "long",
-                                month: "short",
-                                day: "numeric",
-                              }
-                            )}
-                      </h3>
-                      {isToday && (
-                        <span className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">
-                          NOW
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-cyan-100 text-sm">{day.date}</p>
-                  </div>
-
-                  <div className="p-6 text-center">
-                    <img
-                      src={`https:${day.day.condition.icon}`}
-                      alt={day.day.condition.text}
-                      className="w-16 h-16 mx-auto mb-3"
-                    />
-                    <h4 className="font-semibold text-lg text-gray-800 mb-4">
-                      {day.day.condition.text}
-                    </h4>
-
-                    <div className="grid grid-cols-3 gap-2 mb-4 text-sm">
-                      <div className="bg-blue-50 rounded-lg p-2">
-                        <p className="text-blue-600 font-semibold">Avg</p>
-                        <p className="text-lg font-bold text-blue-800">
-                          {day.day.avgtemp_c}°C
-                        </p>
-                      </div>
-                      <div className="bg-red-50 rounded-lg p-2">
-                        <p className="text-red-600 font-semibold">High</p>
-                        <p className="text-lg font-bold text-red-800">
-                          {day.day.maxtemp_c}°C
-                        </p>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-2">
-                        <p className="text-gray-600 font-semibold">Low</p>
-                        <p className="text-lg font-bold text-gray-800">
-                          {day.day.mintemp_c}°C
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="bg-blue-50 rounded-lg p-3 mb-4">
-                      <p className="text-blue-600 font-semibold text-sm">
-                        Rain Chance
-                      </p>
-                      <p className="text-xl font-bold text-blue-800">
-                        {day.day.daily_chance_of_rain ||
-                          day.day.daily_will_it_rain}
-                        %
-                      </p>
-                    </div>
-
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                      <p className="text-yellow-800 font-semibold text-sm mb-1">
-                        Outfit Suggestion
-                      </p>
-                      <p className="text-yellow-700 text-sm">{suggestion}</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Activities Section */}
-        <div className="max-w-6xl mx-auto mt-15 mb-15">
-          <h2 className="text-3xl font-bold mb-6">
-            Activities in {weatherData?.location.name}
-          </h2>
-
-          {/* Tag Filter */}
-          {allTags.length > 0 && (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-4">Filter by tags:</h3>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <button
-                  onClick={() => setSelectedTag(null)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                    selectedTag === null
-                      ? "bg-blue-500 text-white shadow-lg"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  All Activities
-                </button>
-                {allTags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => setSelectedTag(tag)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                      selectedTag === tag
-                        ? "bg-blue-500 text-white shadow-lg"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Activity Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredActivities.map((activity) => (
-              <ActivityCard
-                key={activity.id}
-                activity={activity}
-                selectedTag={selectedTag}
-                onTagClick={setSelectedTag}
-              />
-            ))}
-          </div>
-
-          {filteredActivities.length === 0 && activities.length > 0 && (
-            <div className="text-center py-8">
-              <p className="text-gray-500">
-                No activities found with the selected tag.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function Activities() {
-  return (
-    <Suspense
-      fallback={<div className="text-center py-8">Loading activities...</div>}
-    >
-      <ActivitiesContent />
-    </Suspense>
-  );
-}
-
-interface GeoFeature {
-  properties: { lat: number; lon: number; formatted: string };
-}
-
-interface GeoData {
-  features: GeoFeature[];
-}
-
+// API helper functions - separated for better organization and testing
 async function fetchWeather(city: string): Promise<WeatherData> {
   const key = process.env.NEXT_PUBLIC_WEATHER_API_KEY!;
   const base = process.env.NEXT_PUBLIC_WEATHER_BASE_URL!;
+
   const res = await fetch(
     `${base}/forecast.json?key=${key}&q=${encodeURIComponent(city)}&days=3`
   );
+
   if (!res.ok) throw new Error("Weather fetch failed");
   return res.json();
 }
 
-async function fetchGeo(city: string): Promise<GeoData> {
-  const key = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY!;
-  const base = process.env.NEXT_PUBLIC_GEOAPIFY_BASE_URL!;
-  const res = await fetch(
-    `${base}/geocode/search?text=${encodeURIComponent(city)}&apiKey=${key}`
-  );
-  if (!res.ok) throw new Error("Geocode fetch failed");
-  return res.json();
-}
-
-// Function to generate realistic descriptions based on place type and name
+/**
+ * Generate realistic activity descriptions based on place type and name.
+ * Since we're using a places API that doesn't always provide descriptions,
+ * we create contextual ones that feel natural and helpful.
+ */
 function generateDescription(
   placeName: string,
   category: string,
@@ -596,7 +303,7 @@ function generateDescription(
   const name = placeName.toLowerCase();
   const categoryLower = category.toLowerCase();
 
-  // Specific descriptions based on category
+  // Restaurant descriptions with variety
   if (categoryLower.includes("restaurant")) {
     const cuisineTypes = [
       "delicious local cuisine",
@@ -719,6 +426,279 @@ function generateDescription(
   return generalDescriptions[
     Math.floor(Math.random() * generalDescriptions.length)
   ];
+}
+
+// Main component wrapped in Suspense to handle the useSearchParams hook properly
+function ActivitiesContent() {
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const searchParams = useSearchParams();
+  const city = searchParams.get("city") || "Unknown Location";
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+
+  // Load all data in parallel for better performance
+  useEffect(() => {
+    async function loadAll() {
+      try {
+        // Fire off all API calls simultaneously instead of waiting for each
+        const [weatherResult, geoResult] = await Promise.all([
+          fetchWeather(city),
+          fetchGeo(city),
+        ]);
+
+        setWeatherData(weatherResult);
+
+        const { lat, lon } = geoResult.features[0].properties;
+        const places = await fetchPlaces(lat, lon, city);
+        setActivities(places);
+      } catch (e: any) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (city !== "Unknown Location") {
+      loadAll();
+    } else {
+      setLoading(false);
+    }
+  }, [city]);
+
+  // Show loading spinner while fetching data
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">Loading weather forecast...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state with helpful message
+  if (error || !weatherData) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+          <p className="text-red-600 text-lg">❌ Error: {error}</p>
+          <p className="text-red-500 mt-2">
+            Please try searching for a different city.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Filter activities based on selected tag
+  const filteredActivities = selectedTag
+    ? activities.filter((activity) => activity.tags.includes(selectedTag))
+    : activities;
+
+  // Get unique tags for filter buttons
+  const allTags = [...new Set(activities.flatMap((activity) => activity.tags))];
+
+  return (
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-8">
+        {/* Page header with dynamic location name */}
+        <div className="text-center mb-8">
+          <h1 className="font-bold text-6xl mb-4">
+            Weather Forecast for {weatherData?.location.name || city}
+          </h1>
+          <p className="text-xl text-gray-600">
+            {weatherData?.location.region &&
+              weatherData?.location.country &&
+              `${weatherData.location.region}, ${weatherData.location.country}`}
+          </p>
+        </div>
+
+        {/* 3-day weather forecast cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {weatherData.forecast.forecastday.map((day, index) => {
+            const suggestion = getOutfitSuggestion(day.day.condition.text);
+            const todayStr = new Date().toLocaleDateString("en-CA");
+            const isToday = day.date === todayStr;
+
+            return (
+              <div
+                key={day.date}
+                className={`bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${
+                  isToday ? "ring-2 ring-cyan-500" : ""
+                }`}
+              >
+                {/* Weather card content with outfit suggestions */}
+                <div className="bg-gradient-to-r from-cyan-500 to-blue-500 p-6 text-white">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-bold text-xl">
+                      {index === 0
+                        ? "Today"
+                        : index === 1
+                        ? "Tomorrow"
+                        : new Date(day.date + "T12:00:00").toLocaleDateString(
+                            "en-US",
+                            {
+                              weekday: "long",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
+                    </h3>
+                    {isToday && (
+                      <span className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">
+                        NOW
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-cyan-100 text-sm">{day.date}</p>
+                </div>
+
+                <div className="p-6 text-center">
+                  <img
+                    src={`https:${day.day.condition.icon}`}
+                    alt={day.day.condition.text}
+                    className="w-16 h-16 mx-auto mb-3"
+                  />
+                  <h4 className="font-semibold text-lg text-gray-800 mb-4">
+                    {day.day.condition.text}
+                  </h4>
+
+                  <div className="grid grid-cols-3 gap-2 mb-4 text-sm">
+                    <div className="bg-blue-50 rounded-lg p-2">
+                      <p className="text-blue-600 font-semibold">Avg</p>
+                      <p className="text-lg font-bold text-blue-800">
+                        {day.day.avgtemp_c}°C
+                      </p>
+                    </div>
+                    <div className="bg-red-50 rounded-lg p-2">
+                      <p className="text-red-600 font-semibold">High</p>
+                      <p className="text-lg font-bold text-red-800">
+                        {day.day.maxtemp_c}°C
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <p className="text-gray-600 font-semibold">Low</p>
+                      <p className="text-lg font-bold text-gray-800">
+                        {day.day.mintemp_c}°C
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                    <p className="text-blue-600 font-semibold text-sm">
+                      Rain Chance
+                    </p>
+                    <p className="text-xl font-bold text-blue-800">
+                      {day.day.daily_chance_of_rain ||
+                        day.day.daily_will_it_rain}
+                      %
+                    </p>
+                  </div>
+
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-yellow-800 font-semibold text-sm mb-1">
+                      Outfit Suggestion
+                    </p>
+                    <p className="text-yellow-700 text-sm">{suggestion}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Activities section with filtering */}
+        <div className="max-w-6xl mx-auto mt-15 mb-15">
+          <h2 className="text-3xl font-bold mb-6">
+            Activities in {weatherData?.location.name}
+          </h2>
+
+          {/* Tag filter buttons - only show if we have activities with tags */}
+          {allTags.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-4">Filter by tags:</h3>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <button
+                  onClick={() => setSelectedTag(null)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    selectedTag === null
+                      ? "bg-blue-500 text-white shadow-lg"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  All Activities
+                </button>
+                {allTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setSelectedTag(tag)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                      selectedTag === tag
+                        ? "bg-blue-500 text-white shadow-lg"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Activity Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredActivities.map((activity) => (
+              <ActivityCard
+                key={activity.id}
+                activity={activity}
+                selectedTag={selectedTag}
+                onTagClick={setSelectedTag}
+              />
+            ))}
+          </div>
+
+          {filteredActivities.length === 0 && activities.length > 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-500">
+                No activities found with the selected tag.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Activities() {
+  return (
+    <Suspense
+      fallback={<div className="text-center py-8">Loading activities...</div>}
+    >
+      <ActivitiesContent />
+    </Suspense>
+  );
+}
+
+interface GeoFeature {
+  properties: { lat: number; lon: number; formatted: string };
+}
+
+interface GeoData {
+  features: GeoFeature[];
+}
+
+async function fetchGeo(city: string): Promise<GeoData> {
+  const key = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY!;
+  const base = process.env.NEXT_PUBLIC_GEOAPIFY_BASE_URL!;
+  const res = await fetch(
+    `${base}/geocode/search?text=${encodeURIComponent(city)}&apiKey=${key}`
+  );
+  if (!res.ok) throw new Error("Geocode fetch failed");
+  return res.json();
 }
 
 // Update the fetchPlaces function to return Activity objects with all required fields
