@@ -1,3 +1,15 @@
+function getOutfitSuggestion(condition) {
+    const outfitSuggestions = {
+        "Partly cloudy": "🧢 Light jacket just in case",
+        "Sunny": "🕶️ Sunglasses and light clothes",
+        "Clear": "🕶️ Sunglasses and light clothes",
+        "Rain": "🌧️ Umbrella and waterproof shoes",
+        "Snow": "🧤 Winter coat, gloves, and boots"
+    };
+    
+    return { condition: outfitSuggestions[condition.text] || "🧳 Check forecast" };
+}
+
 async function testWeatherApi() {
     console.log("Running: testWeatherApiCall");
 
@@ -37,8 +49,8 @@ async function testParseWeatherDay() {
     const expected = {
         date: "2025-08-05",
         avgTemp: 21.5,
-        maxtemp_c: 26.0,
-        mintemp_c: 18.0,
+        maxTemp: 26.0,  // Fixed: was maxtemp_c
+        minTemp: 18.0,  // Fixed: was mintemp_c
         condition: "Partly cloudy",
         chanceOfRain: 60
     };
@@ -93,7 +105,16 @@ async function testParseWeatherDay2() {
             chanceOfRain: forecastDay.day.daily_chance_of_rain
         };
 
-        console.assert(typeof parsed.date === "string" || typeof parsed.avgTemp === "number"||typeof parsed.maxTemp === "number"||typeof parsed.minTemp === "number"||typeof parsed.condition === "string"||typeof parsed.chanceOfRain === "number", "❌ Date type is incorrect");
+        // Fix: Change OR (||) to AND (&&)
+        console.assert(
+            typeof parsed.date === "string" && 
+            typeof parsed.avgTemp === "number" && 
+            typeof parsed.maxTemp === "number" && 
+            typeof parsed.minTemp === "number" && 
+            typeof parsed.condition === "string" && 
+            typeof parsed.chanceOfRain === "number", 
+            "❌ Type validation failed"
+        );
 
         console.log("✅ testParseWeatherDay2 passed");
     } catch (error) {
